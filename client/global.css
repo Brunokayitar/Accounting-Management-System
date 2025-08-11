@@ -18,7 +18,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 215 76% 48%;
     --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
@@ -35,24 +35,38 @@
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --ring: 215 76% 48%;
 
     --radius: 0.5rem;
 
+    /* Brand colors - professional blue theme */
+    --brand-50: 214 100% 97%;
+    --brand-100: 214 95% 93%;
+    --brand-200: 213 97% 87%;
+    --brand-300: 212 96% 78%;
+    --brand-400: 213 94% 68%;
+    --brand-500: 217 91% 60%;
+    --brand-600: 221 83% 53%;
+    --brand-700: 224 76% 48%;
+    --brand-800: 226 71% 40%;
+    --brand-900: 224 64% 33%;
+    --brand-950: 226 55% 21%;
+
+    /* Status colors */
+    --success: 142 76% 36%;
+    --success-foreground: 138 62% 47%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 48 96% 89%;
+    --info: 199 89% 48%;
+    --info-foreground: 210 40% 98%;
+
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
