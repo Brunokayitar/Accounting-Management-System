@@ -1,0 +1,74 @@
+# Persistent Volume Claims for Rwanda AMS
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: rwanda-ams-uploads-pvc
+  namespace: rwanda-ams
+  labels:
+    app: rwanda-ams
+    component: storage
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: efs-sc
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: rwanda-ams-backups-pvc
+  namespace: rwanda-ams
+  labels:
+    app: rwanda-ams
+    component: backup
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 500Gi
+  storageClassName: gp2
+
+---
+# Storage Class for EFS (if using AWS)
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: efs-sc
+  labels:
+    app: rwanda-ams
+provisioner: efs.csi.aws.com
+parameters:
+  provisioningMode: efs-ap
+  fileSystemId: fs-xxxxxxxxx  # Replace with actual EFS filesystem ID
+  directoryPerms: "0755"
+volumeBindingMode: Immediate
+reclaimPolicy: Retain
+
+---
+# Network Policy for secure database access
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: rwanda-ams-network-policy
+  namespace: rwanda-ams
+spec:
+  podSelector:
+    matchLabels:
+      app: postgres
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: rwanda-ams
+    ports:
+    - protocol: TCP
+      port: 5432
+  egress:
+  - {}  # Allow all egress for now, can be restricted further
