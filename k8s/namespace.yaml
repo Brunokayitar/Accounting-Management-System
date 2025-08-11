@@ -1,0 +1,46 @@
+# Rwanda AMS Kubernetes Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rwanda-ams
+  labels:
+    name: rwanda-ams
+    environment: production
+---
+# Service Account for Rwanda AMS
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: rwanda-ams-service-account
+  namespace: rwanda-ams
+  labels:
+    app: rwanda-ams
+---
+# Role for Rwanda AMS Service Account
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: rwanda-ams
+  name: rwanda-ams-role
+rules:
+- apiGroups: [""]
+  resources: ["configmaps", "secrets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+---
+# Role Binding
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: rwanda-ams-rolebinding
+  namespace: rwanda-ams
+subjects:
+- kind: ServiceAccount
+  name: rwanda-ams-service-account
+  namespace: rwanda-ams
+roleRef:
+  kind: Role
+  name: rwanda-ams-role
+  apiGroup: rbac.authorization.k8s.io
