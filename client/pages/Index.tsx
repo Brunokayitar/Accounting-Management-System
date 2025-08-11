@@ -219,9 +219,11 @@ export default function Index() {
               <Download className="mr-2 h-4 w-4" />
               Export Reports
             </Button>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              New Invoice
+            <Button asChild>
+              <Link to="/invoices/create">
+                <Plus className="mr-2 h-4 w-4" />
+                New Invoice
+              </Link>
             </Button>
           </div>
         </div>
