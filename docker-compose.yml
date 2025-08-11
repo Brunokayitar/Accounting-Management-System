@@ -1,13 +1,13 @@
 # Rwanda AMS Docker Compose Configuration
 # Production-ready setup with PostgreSQL, Redis, and monitoring
 
-version: '3.8'
+version: "3.8"
 
 services:
   # ============================================================================
   # APPLICATION SERVICES
   # ============================================================================
-  
+
   app:
     build:
       context: .
@@ -55,7 +55,7 @@ services:
   # ============================================================================
   # DATABASE SERVICES
   # ============================================================================
-  
+
   postgres:
     image: postgres:15-alpine
     container_name: rwanda-ams-postgres
@@ -73,7 +73,11 @@ services:
     networks:
       - rwanda-ams-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-rwanda_ams} -d ${POSTGRES_DB:-rwanda_ams}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-rwanda_ams} -d ${POSTGRES_DB:-rwanda_ams}",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -116,7 +120,7 @@ services:
   # ============================================================================
   # MONITORING AND OBSERVABILITY
   # ============================================================================
-  
+
   prometheus:
     image: prom/prometheus:latest
     container_name: rwanda-ams-prometheus
@@ -129,12 +133,12 @@ services:
     networks:
       - rwanda-ams-network
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
-      - '--storage.tsdb.retention.time=200h'
-      - '--web.enable-lifecycle'
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/etc/prometheus/console_libraries"
+      - "--web.console.templates=/etc/prometheus/consoles"
+      - "--storage.tsdb.retention.time=200h"
+      - "--web.enable-lifecycle"
 
   grafana:
     image: grafana/grafana:latest
@@ -158,7 +162,7 @@ services:
   # ============================================================================
   # REVERSE PROXY AND SSL
   # ============================================================================
-  
+
   nginx:
     image: nginx:alpine
     container_name: rwanda-ams-nginx
@@ -179,7 +183,7 @@ services:
   # ============================================================================
   # BACKUP SERVICE
   # ============================================================================
-  
+
   backup:
     image: postgres:15-alpine
     container_name: rwanda-ams-backup

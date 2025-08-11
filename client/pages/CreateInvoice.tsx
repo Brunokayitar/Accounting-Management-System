@@ -1,23 +1,35 @@
 import { useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { 
-  ArrowLeft, 
-  Plus, 
-  Trash2, 
-  Calculator, 
-  Save, 
-  Send, 
+import {
+  ArrowLeft,
+  Plus,
+  Trash2,
+  Calculator,
+  Save,
+  Send,
   Building2,
   User,
   FileText,
-  AlertCircle
+  AlertCircle,
 } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -50,45 +62,81 @@ interface Customer {
 }
 
 const TAX_CODES: TaxCode[] = [
-  { id: "VAT_18", name: "VAT 18%", rate: 18, type: "VAT", description: "Standard VAT rate for Rwanda" },
-  { id: "VAT_0", name: "VAT 0%", rate: 0, type: "VAT", description: "Zero-rated VAT" },
-  { id: "VAT_EXEMPT", name: "VAT Exempt", rate: 0, type: "EXEMPT", description: "VAT exempt goods/services" },
-  { id: "WHT_15", name: "WHT 15%", rate: 15, type: "WHT", description: "Standard withholding tax rate" },
-  { id: "WHT_5", name: "WHT 5%", rate: 5, type: "WHT", description: "Reduced withholding tax rate" },
+  {
+    id: "VAT_18",
+    name: "VAT 18%",
+    rate: 18,
+    type: "VAT",
+    description: "Standard VAT rate for Rwanda",
+  },
+  {
+    id: "VAT_0",
+    name: "VAT 0%",
+    rate: 0,
+    type: "VAT",
+    description: "Zero-rated VAT",
+  },
+  {
+    id: "VAT_EXEMPT",
+    name: "VAT Exempt",
+    rate: 0,
+    type: "EXEMPT",
+    description: "VAT exempt goods/services",
+  },
+  {
+    id: "WHT_15",
+    name: "WHT 15%",
+    rate: 15,
+    type: "WHT",
+    description: "Standard withholding tax rate",
+  },
+  {
+    id: "WHT_5",
+    name: "WHT 5%",
+    rate: 5,
+    type: "WHT",
+    description: "Reduced withholding tax rate",
+  },
 ];
 
 const SAMPLE_CUSTOMERS: Customer[] = [
-  { 
-    id: "1", 
-    name: "Kigali Tech Solutions Ltd", 
-    vatNumber: "VAT-001234567", 
+  {
+    id: "1",
+    name: "Kigali Tech Solutions Ltd",
+    vatNumber: "VAT-001234567",
     address: "KG 123 St, Kigali",
-    entityType: "company"
+    entityType: "company",
   },
-  { 
-    id: "2", 
-    name: "Rwanda Bank Ltd", 
-    vatNumber: "VAT-098765432", 
+  {
+    id: "2",
+    name: "Rwanda Bank Ltd",
+    vatNumber: "VAT-098765432",
     address: "KN 456 Ave, Kigali",
-    entityType: "company"
+    entityType: "company",
   },
-  { 
-    id: "3", 
-    name: "Ministry of ICT", 
+  {
+    id: "3",
+    name: "Ministry of ICT",
     address: "Government Ave, Kigali",
-    entityType: "government"
+    entityType: "government",
   },
 ];
 
 export default function CreateInvoice() {
   const navigate = useNavigate();
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
+    null,
+  );
   const [invoiceNumber, setInvoiceNumber] = useState("INV-2024-003");
-  const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split('T')[0]);
-  const [dueDate, setDueDate] = useState(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+  const [invoiceDate, setInvoiceDate] = useState(
+    new Date().toISOString().split("T")[0],
+  );
+  const [dueDate, setDueDate] = useState(
+    new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+  );
   const [currency, setCurrency] = useState("RWF");
   const [notes, setNotes] = useState("");
-  
+
   const [lineItems, setLineItems] = useState<InvoiceLineItem[]>([
     {
       id: "1",
@@ -98,41 +146,48 @@ export default function CreateInvoice() {
       taxCode: "VAT_18",
       amount: 0,
       vatAmount: 0,
-      whtAmount: 0
-    }
+      whtAmount: 0,
+    },
   ]);
 
-  const calculateLineItem = useCallback((item: InvoiceLineItem): InvoiceLineItem => {
-    const taxCode = TAX_CODES.find(tc => tc.id === item.taxCode);
-    if (!taxCode) return item;
+  const calculateLineItem = useCallback(
+    (item: InvoiceLineItem): InvoiceLineItem => {
+      const taxCode = TAX_CODES.find((tc) => tc.id === item.taxCode);
+      if (!taxCode) return item;
 
-    const subtotal = item.quantity * item.unitPrice;
-    let vatAmount = 0;
-    let whtAmount = 0;
+      const subtotal = item.quantity * item.unitPrice;
+      let vatAmount = 0;
+      let whtAmount = 0;
 
-    if (taxCode.type === "VAT") {
-      vatAmount = (subtotal * taxCode.rate) / 100;
-    } else if (taxCode.type === "WHT") {
-      whtAmount = (subtotal * taxCode.rate) / 100;
-    }
+      if (taxCode.type === "VAT") {
+        vatAmount = (subtotal * taxCode.rate) / 100;
+      } else if (taxCode.type === "WHT") {
+        whtAmount = (subtotal * taxCode.rate) / 100;
+      }
 
-    return {
-      ...item,
-      amount: subtotal,
-      vatAmount,
-      whtAmount
-    };
-  }, []);
+      return {
+        ...item,
+        amount: subtotal,
+        vatAmount,
+        whtAmount,
+      };
+    },
+    [],
+  );
 
-  const updateLineItem = (id: string, field: keyof InvoiceLineItem, value: any) => {
-    setLineItems(items => 
-      items.map(item => {
+  const updateLineItem = (
+    id: string,
+    field: keyof InvoiceLineItem,
+    value: any,
+  ) => {
+    setLineItems((items) =>
+      items.map((item) => {
         if (item.id === id) {
           const updated = { ...item, [field]: value };
           return calculateLineItem(updated);
         }
         return item;
-      })
+      }),
     );
   };
 
@@ -145,14 +200,14 @@ export default function CreateInvoice() {
       taxCode: "VAT_18",
       amount: 0,
       vatAmount: 0,
-      whtAmount: 0
+      whtAmount: 0,
     };
     setLineItems([...lineItems, newItem]);
   };
 
   const removeLineItem = (id: string) => {
     if (lineItems.length > 1) {
-      setLineItems(items => items.filter(item => item.id !== id));
+      setLineItems((items) => items.filter((item) => item.id !== id));
     }
   };
 
@@ -166,11 +221,11 @@ export default function CreateInvoice() {
   };
 
   const formatRWF = (amount: number) => {
-    return new Intl.NumberFormat('en-RW', {
-      style: 'currency',
-      currency: 'RWF',
+    return new Intl.NumberFormat("en-RW", {
+      style: "currency",
+      currency: "RWF",
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      maximumFractionDigits: 0,
     }).format(amount);
   };
 
@@ -193,7 +248,10 @@ export default function CreateInvoice() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center space-x-4">
-              <Link to="/" className="flex items-center space-x-2 text-muted-foreground hover:text-foreground">
+              <Link
+                to="/"
+                className="flex items-center space-x-2 text-muted-foreground hover:text-foreground"
+              >
                 <ArrowLeft className="h-4 w-4" />
                 <span>Back to Dashboard</span>
               </Link>
@@ -203,7 +261,7 @@ export default function CreateInvoice() {
                 <span className="font-semibold">Create Invoice</span>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-3">
               <Button variant="outline" onClick={handleSave}>
                 <Save className="mr-2 h-4 w-4" />
@@ -264,10 +322,15 @@ export default function CreateInvoice() {
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="customer">Customer</Label>
-                  <Select value={selectedCustomer?.id || ""} onValueChange={(value) => {
-                    const customer = SAMPLE_CUSTOMERS.find(c => c.id === value);
-                    setSelectedCustomer(customer || null);
-                  }}>
+                  <Select
+                    value={selectedCustomer?.id || ""}
+                    onValueChange={(value) => {
+                      const customer = SAMPLE_CUSTOMERS.find(
+                        (c) => c.id === value,
+                      );
+                      setSelectedCustomer(customer || null);
+                    }}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select a customer" />
                     </SelectTrigger>
@@ -288,11 +351,17 @@ export default function CreateInvoice() {
                   </Select>
                   {selectedCustomer && (
                     <div className="mt-2 p-3 bg-muted rounded-md">
-                      <p className="text-sm font-medium">{selectedCustomer.name}</p>
+                      <p className="text-sm font-medium">
+                        {selectedCustomer.name}
+                      </p>
                       {selectedCustomer.vatNumber && (
-                        <p className="text-xs text-muted-foreground">VAT: {selectedCustomer.vatNumber}</p>
+                        <p className="text-xs text-muted-foreground">
+                          VAT: {selectedCustomer.vatNumber}
+                        </p>
                       )}
-                      <p className="text-xs text-muted-foreground">{selectedCustomer.address}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {selectedCustomer.address}
+                      </p>
                       <Badge variant="outline" className="mt-1">
                         {selectedCustomer.entityType}
                       </Badge>
@@ -338,14 +407,21 @@ export default function CreateInvoice() {
             <CardContent>
               <div className="space-y-4">
                 {lineItems.map((item, index) => (
-                  <div key={item.id} className="grid gap-4 md:grid-cols-12 items-end p-4 border border-border rounded-lg">
+                  <div
+                    key={item.id}
+                    className="grid gap-4 md:grid-cols-12 items-end p-4 border border-border rounded-lg"
+                  >
                     <div className="md:col-span-4">
-                      <Label htmlFor={`description-${item.id}`}>Description</Label>
+                      <Label htmlFor={`description-${item.id}`}>
+                        Description
+                      </Label>
                       <Input
                         id={`description-${item.id}`}
                         placeholder="Product or service description"
                         value={item.description}
-                        onChange={(e) => updateLineItem(item.id, "description", e.target.value)}
+                        onChange={(e) =>
+                          updateLineItem(item.id, "description", e.target.value)
+                        }
                       />
                     </div>
                     <div className="md:col-span-1">
@@ -356,23 +432,42 @@ export default function CreateInvoice() {
                         min="0"
                         step="0.01"
                         value={item.quantity}
-                        onChange={(e) => updateLineItem(item.id, "quantity", parseFloat(e.target.value) || 0)}
+                        onChange={(e) =>
+                          updateLineItem(
+                            item.id,
+                            "quantity",
+                            parseFloat(e.target.value) || 0,
+                          )
+                        }
                       />
                     </div>
                     <div className="md:col-span-2">
-                      <Label htmlFor={`unit-price-${item.id}`}>Unit Price</Label>
+                      <Label htmlFor={`unit-price-${item.id}`}>
+                        Unit Price
+                      </Label>
                       <Input
                         id={`unit-price-${item.id}`}
                         type="number"
                         min="0"
                         step="0.01"
                         value={item.unitPrice}
-                        onChange={(e) => updateLineItem(item.id, "unitPrice", parseFloat(e.target.value) || 0)}
+                        onChange={(e) =>
+                          updateLineItem(
+                            item.id,
+                            "unitPrice",
+                            parseFloat(e.target.value) || 0,
+                          )
+                        }
                       />
                     </div>
                     <div className="md:col-span-2">
                       <Label htmlFor={`tax-code-${item.id}`}>Tax Code</Label>
-                      <Select value={item.taxCode} onValueChange={(value) => updateLineItem(item.id, "taxCode", value)}>
+                      <Select
+                        value={item.taxCode}
+                        onValueChange={(value) =>
+                          updateLineItem(item.id, "taxCode", value)
+                        }
+                      >
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -395,10 +490,14 @@ export default function CreateInvoice() {
                       <div className="text-sm space-y-1">
                         <p className="font-medium">{formatRWF(item.amount)}</p>
                         {item.vatAmount > 0 && (
-                          <p className="text-xs text-muted-foreground">VAT: {formatRWF(item.vatAmount)}</p>
+                          <p className="text-xs text-muted-foreground">
+                            VAT: {formatRWF(item.vatAmount)}
+                          </p>
                         )}
                         {item.whtAmount > 0 && (
-                          <p className="text-xs text-muted-foreground">WHT: -{formatRWF(item.whtAmount)}</p>
+                          <p className="text-xs text-muted-foreground">
+                            WHT: -{formatRWF(item.whtAmount)}
+                          </p>
                         )}
                       </div>
                     </div>
@@ -420,9 +519,10 @@ export default function CreateInvoice() {
               <Alert className="mt-6">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  <strong>Rwanda Tax Information:</strong> VAT at 18% is automatically calculated. 
-                  Withholding tax (WHT) applies to certain payments as per RRA regulations. 
-                  Government entities may be exempt from certain taxes.
+                  <strong>Rwanda Tax Information:</strong> VAT at 18% is
+                  automatically calculated. Withholding tax (WHT) applies to
+                  certain payments as per RRA regulations. Government entities
+                  may be exempt from certain taxes.
                 </AlertDescription>
               </Alert>
             </CardContent>
@@ -449,18 +549,26 @@ export default function CreateInvoice() {
                   <div className="space-y-3">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Subtotal:</span>
-                      <span className="font-medium">{formatRWF(totals.subtotal)}</span>
+                      <span className="font-medium">
+                        {formatRWF(totals.subtotal)}
+                      </span>
                     </div>
                     {totals.totalVAT > 0 && (
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">VAT (18%):</span>
-                        <span className="font-medium">{formatRWF(totals.totalVAT)}</span>
+                        <span className="text-muted-foreground">
+                          VAT (18%):
+                        </span>
+                        <span className="font-medium">
+                          {formatRWF(totals.totalVAT)}
+                        </span>
                       </div>
                     )}
                     {totals.totalWHT > 0 && (
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">WHT:</span>
-                        <span className="font-medium text-destructive">-{formatRWF(totals.totalWHT)}</span>
+                        <span className="font-medium text-destructive">
+                          -{formatRWF(totals.totalWHT)}
+                        </span>
                       </div>
                     )}
                     <Separator />

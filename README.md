@@ -50,23 +50,27 @@ A comprehensive, production-ready Accounting Management System specifically desi
 ### Local Development
 
 1. **Clone the repository**
+
 ```bash
 git clone https://github.com/rwanda-ams/ams.git
 cd ams
 ```
 
 2. **Install dependencies**
+
 ```bash
 npm install
 ```
 
 3. **Setup environment variables**
+
 ```bash
 cp .env.example .env
 # Edit .env with your database and API keys
 ```
 
 4. **Initialize database**
+
 ```bash
 # Start PostgreSQL and Redis
 docker-compose up -d postgres redis
@@ -77,6 +81,7 @@ npm run db:seed
 ```
 
 5. **Start development server**
+
 ```bash
 npm run dev
 ```
@@ -99,12 +104,14 @@ open http://localhost:8080
 ## 📊 Key Features
 
 ### Multi-Entity Accounting
+
 - Consolidated financial reporting across subsidiaries
 - Entity-specific chart of accounts
 - Inter-company transaction elimination
 - Multi-currency support with RWF base
 
 ### Rwanda Tax Engine
+
 - **VAT Calculations**: Automatic rate application based on product/service codes
 - **Filing Frequency**: Auto-switch between monthly/quarterly based on turnover
 - **WHT Matrix**: Comprehensive payment type and recipient classification
@@ -112,6 +119,7 @@ open http://localhost:8080
 - **Tax Rules**: Version-controlled rules engine for regulatory changes
 
 ### Compliance & Reporting
+
 - Pre-filled VAT returns (monthly/quarterly)
 - WHT certificates and registers
 - PAYE monthly summaries
@@ -120,6 +128,7 @@ open http://localhost:8080
 - RRA eTax CSV/Excel export formats
 
 ### Security & Access Control
+
 - Role-based access control (Admin, CFO, Accountant, TaxAgent, Auditor)
 - Multi-factor authentication (2FA)
 - API rate limiting and monitoring
@@ -129,28 +138,36 @@ open http://localhost:8080
 ## 🏛️ Rwanda Tax Regulations (Sources & Implementation)
 
 ### VAT Implementation
+
 **Source**: RRA VAT Law, Article 15
+
 - **Standard Rate**: 18% on most goods and services
 - **Zero Rate**: 0% on exports, international transport, approved raw materials
 - **Exempt**: Financial services, insurance, education, healthcare
 - **Filing**: Monthly (turnover > RWF 200M), Quarterly (≤ RWF 200M)
 
 ### Withholding Tax Matrix
+
 **Source**: RRA Withholding Tax Guidelines
+
 - **15% Standard**: Most payments to residents
 - **5% Reduced**: Domestic dividends and interest
 - **30% Non-Resident**: Payments without tax treaty benefits
 - **Exempt**: Government entities, approved organizations
 
 ### PAYE Tax Bands (2024)
+
 **Source**: RRA PAYE Guidelines
+
 - **0%**: Monthly income up to RWF 60,000
 - **20%**: RWF 60,001 to RWF 100,000
 - **30%**: Above RWF 100,000
 - **15% Flat**: Casual labor payments
 
 ### Corporate Income Tax
+
 **Source**: RRA CIT Law, PwC Rwanda Tax Guide
+
 - **28% Standard**: Effective from 2024
 - **Alternative Regimes**: SME flat rates, presumptive taxation
 - **Incentives**: 0%/15% for qualifying exporters and international services
@@ -196,18 +213,19 @@ The system includes configurable tax codes and rules:
 
 ```sql
 -- Update VAT rate (requires admin approval)
-UPDATE tax_codes 
-SET rate = 18.0, effective_from = '2024-01-01' 
+UPDATE tax_codes
+SET rate = 18.0, effective_from = '2024-01-01'
 WHERE code = 'VAT_18';
 
 -- Add new tax code for Digital Services Tax
-INSERT INTO tax_codes (code, name, tax_type, rate, effective_from) 
+INSERT INTO tax_codes (code, name, tax_type, rate, effective_from)
 VALUES ('DST_1_5', 'Digital Services Tax 1.5%', 'DST', 1.5, '2024-07-01');
 ```
 
 ## 📚 API Documentation
 
 ### Authentication
+
 All API endpoints require Bearer token authentication:
 
 ```bash
@@ -218,6 +236,7 @@ curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
 ### Key Endpoints
 
 #### VAT Calculation
+
 ```bash
 POST /api/v1/entities/{entityId}/vat/calculate
 {
@@ -228,6 +247,7 @@ POST /api/v1/entities/{entityId}/vat/calculate
 ```
 
 #### Generate VAT Return
+
 ```bash
 POST /api/v1/entities/{entityId}/vat/returns
 {
@@ -237,6 +257,7 @@ POST /api/v1/entities/{entityId}/vat/returns
 ```
 
 #### WHT Calculation
+
 ```bash
 POST /api/v1/entities/{entityId}/wht/calculate
 {
@@ -253,6 +274,7 @@ POST /api/v1/entities/{entityId}/wht/calculate
 ### Production Deployment on Kubernetes
 
 1. **Configure secrets**
+
 ```bash
 kubectl create secret generic rwanda-ams-secrets \
   --from-literal=DATABASE_URL="postgresql://..." \
@@ -261,11 +283,13 @@ kubectl create secret generic rwanda-ams-secrets \
 ```
 
 2. **Deploy application**
+
 ```bash
 kubectl apply -f k8s/
 ```
 
 3. **Verify deployment**
+
 ```bash
 kubectl get pods -n rwanda-ams
 kubectl logs deployment/rwanda-ams-app -n rwanda-ams
@@ -294,6 +318,7 @@ docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 ## 🧪 Testing
 
 ### Run Test Suite
+
 ```bash
 # Unit tests
 npm test
@@ -312,6 +337,7 @@ npm run test:compliance
 ```
 
 ### Test Coverage
+
 ```bash
 npm run test:coverage
 open coverage/lcov-report/index.html
@@ -320,6 +346,7 @@ open coverage/lcov-report/index.html
 ## 📊 Monitoring & Observability
 
 ### Application Metrics
+
 - Request/response times
 - Database query performance
 - Tax calculation accuracy
@@ -327,6 +354,7 @@ open coverage/lcov-report/index.html
 - Error rates and types
 
 ### Business Metrics
+
 - Invoice processing volume
 - VAT filing compliance rates
 - Payment processing success
@@ -334,6 +362,7 @@ open coverage/lcov-report/index.html
 - System uptime and reliability
 
 ### Grafana Dashboards
+
 - **Financial Overview**: Revenue, expenses, tax obligations
 - **Compliance Dashboard**: Filing deadlines, submission status
 - **Performance Metrics**: API response times, database performance
@@ -342,12 +371,14 @@ open coverage/lcov-report/index.html
 ## 🛡️ Security
 
 ### Data Protection
+
 - AES-256 encryption for sensitive data
 - TLS 1.3 for data in transit
 - Regular security audits and penetration testing
 - GDPR/privacy compliance measures
 
 ### Access Controls
+
 - JWT-based authentication with refresh tokens
 - Role-based permissions (RBAC)
 - Multi-factor authentication (2FA)
@@ -355,6 +386,7 @@ open coverage/lcov-report/index.html
 - API rate limiting and DDoS protection
 
 ### Audit & Compliance
+
 - Immutable audit trail for all transactions
 - User action logging with timestamps
 - Regular automated backups
@@ -364,6 +396,7 @@ open coverage/lcov-report/index.html
 ## 🔄 Migration & Upgrades
 
 ### Database Migrations
+
 ```bash
 # Run pending migrations
 npm run db:migrate
@@ -376,6 +409,7 @@ npm run db:reset
 ```
 
 ### Tax Rule Updates
+
 When Rwanda tax regulations change:
 
 1. **Update tax codes**: Modify rates and effective dates
@@ -390,17 +424,20 @@ npm run tax:migrate --version=2024.2 --effective-date=2024-07-01
 ## 📞 Support & Maintenance
 
 ### Support Channels
+
 - **Technical Issues**: [GitHub Issues](https://github.com/rwanda-ams/ams/issues)
 - **Business Queries**: support@rwanda-ams.com
 - **Emergency Hotline**: +250-788-SUPPORT (24/7)
 
 ### Maintenance Schedule
+
 - **Security Updates**: Applied immediately
 - **Feature Updates**: Monthly release cycle
 - **Tax Regulation Updates**: As needed (typically quarterly)
 - **Database Maintenance**: Weekly during low-usage periods
 
 ### Backup & Recovery
+
 - **Automated Backups**: Daily full backup, hourly incremental
 - **Retention**: 90 days rolling retention, yearly archives
 - **Recovery Time**: < 30 minutes for system restore
@@ -409,6 +446,7 @@ npm run tax:migrate --version=2024.2 --effective-date=2024-07-01
 ## 🤝 Contributing
 
 ### Development Process
+
 1. Fork the repository
 2. Create feature branch: `git checkout -b feature/vat-improvements`
 3. Commit changes: `git commit -m 'Add enhanced VAT calculations'`
@@ -416,6 +454,7 @@ npm run tax:migrate --version=2024.2 --effective-date=2024-07-01
 5. Submit pull request
 
 ### Code Standards
+
 - TypeScript strict mode
 - ESLint + Prettier configuration
 - 90%+ test coverage requirement
@@ -423,7 +462,9 @@ npm run tax:migrate --version=2024.2 --effective-date=2024-07-01
 - Documentation for all public APIs
 
 ### Tax Compliance Contributions
+
 When contributing tax-related features:
+
 - Cite official RRA sources
 - Include test cases with expected outcomes
 - Document any assumptions or interpretations

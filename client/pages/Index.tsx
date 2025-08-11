@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  DollarSign, 
-  FileText, 
-  Calculator, 
-  Users, 
-  Building2, 
+import {
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  FileText,
+  Calculator,
+  Users,
+  Building2,
   Calendar,
   Receipt,
   PieChart,
@@ -21,9 +21,15 @@ import {
   Search,
   Filter,
   Download,
-  Eye
+  Eye,
 } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -70,7 +76,7 @@ export default function Index() {
     monthlyGrowth: 12.5,
     activeClients: 147,
     pendingInvoices: 23,
-    overdueInvoices: 8
+    overdueInvoices: 8,
   });
 
   const [recentTransactions] = useState<RecentTransaction[]>([
@@ -83,7 +89,7 @@ export default function Index() {
       date: "2024-01-15",
       status: "completed",
       vatAmount: 2700000,
-      whtAmount: 2250000
+      whtAmount: 2250000,
     },
     {
       id: "PAY-2024-045",
@@ -92,7 +98,7 @@ export default function Index() {
       amount: 2500000,
       currency: "RWF",
       date: "2024-01-14",
-      status: "completed"
+      status: "completed",
     },
     {
       id: "INV-2024-002",
@@ -102,7 +108,7 @@ export default function Index() {
       currency: "RWF",
       date: "2024-01-13",
       status: "pending",
-      vatAmount: 4500000
+      vatAmount: 4500000,
     },
     {
       id: "EXP-2024-021",
@@ -111,8 +117,8 @@ export default function Index() {
       amount: 8500000,
       currency: "RWF",
       date: "2024-01-12",
-      status: "overdue"
-    }
+      status: "overdue",
+    },
   ]);
 
   const [taxAlerts] = useState<TaxAlert[]>([
@@ -120,9 +126,10 @@ export default function Index() {
       id: "alert-1",
       type: "vat_due",
       title: "VAT Return Due",
-      description: "Monthly VAT return filing deadline approaching for December 2023",
+      description:
+        "Monthly VAT return filing deadline approaching for December 2023",
       dueDate: "2024-01-15",
-      priority: "high"
+      priority: "high",
     },
     {
       id: "alert-2",
@@ -130,7 +137,7 @@ export default function Index() {
       title: "PAYE Filing Due",
       description: "Employee PAYE returns must be submitted",
       dueDate: "2024-01-20",
-      priority: "medium"
+      priority: "medium",
     },
     {
       id: "alert-3",
@@ -138,34 +145,42 @@ export default function Index() {
       title: "Withholding Tax Certificates",
       description: "Issue WHT certificates to suppliers for Q4 2023",
       dueDate: "2024-01-31",
-      priority: "medium"
-    }
+      priority: "medium",
+    },
   ]);
 
   const formatRWF = (amount: number) => {
-    return new Intl.NumberFormat('en-RW', {
-      style: 'currency',
-      currency: 'RWF',
+    return new Intl.NumberFormat("en-RW", {
+      style: "currency",
+      currency: "RWF",
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      maximumFractionDigits: 0,
     }).format(amount);
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "completed": return "bg-success text-success-foreground";
-      case "pending": return "bg-warning text-warning-foreground";
-      case "overdue": return "bg-destructive text-destructive-foreground";
-      default: return "bg-muted text-muted-foreground";
+      case "completed":
+        return "bg-success text-success-foreground";
+      case "pending":
+        return "bg-warning text-warning-foreground";
+      case "overdue":
+        return "bg-destructive text-destructive-foreground";
+      default:
+        return "bg-muted text-muted-foreground";
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case "high": return "bg-destructive text-destructive-foreground";
-      case "medium": return "bg-warning text-warning-foreground";
-      case "low": return "bg-info text-info-foreground";
-      default: return "bg-muted text-muted-foreground";
+      case "high":
+        return "bg-destructive text-destructive-foreground";
+      case "medium":
+        return "bg-warning text-warning-foreground";
+      case "low":
+        return "bg-info text-info-foreground";
+      default:
+        return "bg-muted text-muted-foreground";
     }
   };
 
@@ -179,12 +194,16 @@ export default function Index() {
               <div className="flex items-center space-x-2">
                 <Building2 className="h-8 w-8 text-primary" />
                 <div>
-                  <h1 className="text-xl font-bold text-foreground">Rwanda AMS</h1>
-                  <p className="text-xs text-muted-foreground">Accounting Management System</p>
+                  <h1 className="text-xl font-bold text-foreground">
+                    Rwanda AMS
+                  </h1>
+                  <p className="text-xs text-muted-foreground">
+                    Accounting Management System
+                  </p>
                 </div>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -209,7 +228,9 @@ export default function Index() {
         {/* Page Title and Actions */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight text-foreground">Dashboard</h2>
+            <h2 className="text-3xl font-bold tracking-tight text-foreground">
+              Dashboard
+            </h2>
             <p className="text-muted-foreground">
               Monitor your business finances and Rwanda tax compliance
             </p>
@@ -232,11 +253,15 @@ export default function Index() {
         <div className="mb-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Total Revenue
+              </CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{formatRWF(metrics.totalRevenue)}</div>
+              <div className="text-2xl font-bold">
+                {formatRWF(metrics.totalRevenue)}
+              </div>
               <p className="text-xs text-muted-foreground">
                 +{metrics.monthlyGrowth}% from last month
               </p>
@@ -249,7 +274,9 @@ export default function Index() {
               <Calculator className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{formatRWF(metrics.vatOwed)}</div>
+              <div className="text-2xl font-bold">
+                {formatRWF(metrics.vatOwed)}
+              </div>
               <p className="text-xs text-muted-foreground">
                 Due: January 15, 2024
               </p>
@@ -258,11 +285,15 @@ export default function Index() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Outstanding A/R</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Outstanding A/R
+              </CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{formatRWF(metrics.outstandingReceivables)}</div>
+              <div className="text-2xl font-bold">
+                {formatRWF(metrics.outstandingReceivables)}
+              </div>
               <p className="text-xs text-muted-foreground">
                 {metrics.pendingInvoices} pending invoices
               </p>
@@ -271,11 +302,15 @@ export default function Index() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Payables Due</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Payables Due
+              </CardTitle>
               <TrendingDown className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{formatRWF(metrics.payablesDue)}</div>
+              <div className="text-2xl font-bold">
+                {formatRWF(metrics.payablesDue)}
+              </div>
               <p className="text-xs text-muted-foreground">
                 {metrics.overdueInvoices} overdue items
               </p>
@@ -297,21 +332,28 @@ export default function Index() {
           <CardContent>
             <div className="space-y-3">
               {taxAlerts.map((alert) => (
-                <div key={alert.id} className="flex items-center justify-between rounded-lg border border-border p-4">
+                <div
+                  key={alert.id}
+                  className="flex items-center justify-between rounded-lg border border-border p-4"
+                >
                   <div className="flex items-center space-x-3">
                     <Badge className={getPriorityColor(alert.priority)}>
                       {alert.priority.toUpperCase()}
                     </Badge>
                     <div>
                       <h4 className="font-medium">{alert.title}</h4>
-                      <p className="text-sm text-muted-foreground">{alert.description}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {alert.description}
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-3">
                     <div className="text-right">
-                      <p className="text-sm font-medium">Due: {alert.dueDate}</p>
+                      <p className="text-sm font-medium">
+                        Due: {alert.dueDate}
+                      </p>
                       <p className="text-xs text-muted-foreground">
-                        {alert.type.replace('_', ' ').toUpperCase()}
+                        {alert.type.replace("_", " ").toUpperCase()}
                       </p>
                     </div>
                     <Button size="sm" variant="outline">
@@ -354,15 +396,26 @@ export default function Index() {
               <CardContent>
                 <div className="space-y-4">
                   {recentTransactions.map((transaction) => (
-                    <div key={transaction.id} className="flex items-center justify-between rounded-lg border border-border p-4">
+                    <div
+                      key={transaction.id}
+                      className="flex items-center justify-between rounded-lg border border-border p-4"
+                    >
                       <div className="flex items-center space-x-4">
                         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-                          {transaction.type === "invoice" && <FileText className="h-5 w-5" />}
-                          {transaction.type === "payment" && <DollarSign className="h-5 w-5" />}
-                          {transaction.type === "expense" && <Receipt className="h-5 w-5" />}
+                          {transaction.type === "invoice" && (
+                            <FileText className="h-5 w-5" />
+                          )}
+                          {transaction.type === "payment" && (
+                            <DollarSign className="h-5 w-5" />
+                          )}
+                          {transaction.type === "expense" && (
+                            <Receipt className="h-5 w-5" />
+                          )}
                         </div>
                         <div>
-                          <h4 className="font-medium">{transaction.description}</h4>
+                          <h4 className="font-medium">
+                            {transaction.description}
+                          </h4>
                           <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                             <span>{transaction.id}</span>
                             <span>•</span>
@@ -370,13 +423,17 @@ export default function Index() {
                             {transaction.vatAmount && (
                               <>
                                 <span>•</span>
-                                <span>VAT: {formatRWF(transaction.vatAmount)}</span>
+                                <span>
+                                  VAT: {formatRWF(transaction.vatAmount)}
+                                </span>
                               </>
                             )}
                             {transaction.whtAmount && (
                               <>
                                 <span>•</span>
-                                <span>WHT: {formatRWF(transaction.whtAmount)}</span>
+                                <span>
+                                  WHT: {formatRWF(transaction.whtAmount)}
+                                </span>
                               </>
                             )}
                           </div>
@@ -384,7 +441,9 @@ export default function Index() {
                       </div>
                       <div className="flex items-center space-x-3">
                         <div className="text-right">
-                          <p className="font-medium">{formatRWF(transaction.amount)}</p>
+                          <p className="font-medium">
+                            {formatRWF(transaction.amount)}
+                          </p>
                           <Badge className={getStatusColor(transaction.status)}>
                             {transaction.status}
                           </Badge>
@@ -437,13 +496,19 @@ export default function Index() {
               <Card className="cursor-pointer hover:shadow-md transition-shadow">
                 <CardHeader>
                   <CardTitle className="text-lg">VAT Return</CardTitle>
-                  <CardDescription>Generate monthly/quarterly VAT returns for RRA submission</CardDescription>
+                  <CardDescription>
+                    Generate monthly/quarterly VAT returns for RRA submission
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Next Due: Jan 15, 2024</p>
-                      <p className="text-sm font-medium">Amount: {formatRWF(87345000)}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Next Due: Jan 15, 2024
+                      </p>
+                      <p className="text-sm font-medium">
+                        Amount: {formatRWF(87345000)}
+                      </p>
                     </div>
                     <Button size="sm">Generate</Button>
                   </div>
@@ -453,12 +518,16 @@ export default function Index() {
               <Card className="cursor-pointer hover:shadow-md transition-shadow">
                 <CardHeader>
                   <CardTitle className="text-lg">PAYE Summary</CardTitle>
-                  <CardDescription>Employee payroll tax summary for RRA filing</CardDescription>
+                  <CardDescription>
+                    Employee payroll tax summary for RRA filing
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Next Due: Jan 20, 2024</p>
+                      <p className="text-sm text-muted-foreground">
+                        Next Due: Jan 20, 2024
+                      </p>
                       <p className="text-sm font-medium">147 employees</p>
                     </div>
                     <Button size="sm">Generate</Button>
@@ -469,7 +538,9 @@ export default function Index() {
               <Card className="cursor-pointer hover:shadow-md transition-shadow">
                 <CardHeader>
                   <CardTitle className="text-lg">WHT Register</CardTitle>
-                  <CardDescription>Withholding tax register and certificate generation</CardDescription>
+                  <CardDescription>
+                    Withholding tax register and certificate generation
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center justify-between">
@@ -485,12 +556,16 @@ export default function Index() {
               <Card className="cursor-pointer hover:shadow-md transition-shadow">
                 <CardHeader>
                   <CardTitle className="text-lg">Balance Sheet</CardTitle>
-                  <CardDescription>Financial position statement with multi-entity support</CardDescription>
+                  <CardDescription>
+                    Financial position statement with multi-entity support
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">As of Dec 31, 2023</p>
+                      <p className="text-sm text-muted-foreground">
+                        As of Dec 31, 2023
+                      </p>
                       <p className="text-sm font-medium">All entities</p>
                     </div>
                     <Button size="sm">Generate</Button>
@@ -501,7 +576,9 @@ export default function Index() {
               <Card className="cursor-pointer hover:shadow-md transition-shadow">
                 <CardHeader>
                   <CardTitle className="text-lg">P&L Statement</CardTitle>
-                  <CardDescription>Profit and loss statement with tax details</CardDescription>
+                  <CardDescription>
+                    Profit and loss statement with tax details
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center justify-between">
@@ -517,12 +594,16 @@ export default function Index() {
               <Card className="cursor-pointer hover:shadow-md transition-shadow">
                 <CardHeader>
                   <CardTitle className="text-lg">CIT Filing Pack</CardTitle>
-                  <CardDescription>Corporate income tax annual filing documents</CardDescription>
+                  <CardDescription>
+                    Corporate income tax annual filing documents
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Due: Mar 31, 2024</p>
+                      <p className="text-sm text-muted-foreground">
+                        Due: Mar 31, 2024
+                      </p>
                       <p className="text-sm font-medium">Tax year 2023</p>
                     </div>
                     <Button size="sm">Generate</Button>

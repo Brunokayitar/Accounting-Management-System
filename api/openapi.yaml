@@ -3,7 +3,7 @@ info:
   title: Rwanda Accounting Management System (AMS) API
   description: |
     Comprehensive accounting and tax compliance API for businesses operating in Rwanda.
-    
+
     This API provides endpoints for:
     - Multi-entity accounting operations
     - Rwanda Revenue Authority (RRA) tax compliance
@@ -12,20 +12,20 @@ info:
     - PAYE payroll tax calculations
     - Corporate Income Tax (CIT) support
     - Financial reporting and audit trails
-    
+
     **Rwanda Tax Compliance Features:**
     - Automatic VAT filing frequency selection (monthly/quarterly based on RWF 200M threshold)
     - Pre-filled VAT returns compatible with RRA eTax system
     - WHT matrix application (15% standard, 5% reduced, 30% non-resident)
     - PAYE calculations using current RRA bands
     - Multi-currency support with RWF as functional currency
-    
+
     **Authentication:** All endpoints require Bearer token authentication with appropriate RBAC permissions.
-    
+
     **Rate Limiting:** 1000 requests per minute per API key.
-    
+
     **Data Formats:** All monetary amounts in minor currency units (e.g., RWF 1,000 = 100000).
-    
+
   version: 1.0.0
   contact:
     name: Rwanda AMS Support
@@ -50,7 +50,7 @@ paths:
   # ============================================================================
   # VAT ENDPOINTS
   # ============================================================================
-  
+
   /entities/{entityId}/vat/calculate:
     post:
       tags:
@@ -61,7 +61,7 @@ paths:
         Supports 18% standard rate, 0% zero-rated, and exempt calculations.
       operationId: calculateVAT
       parameters:
-        - $ref: '#/components/parameters/EntityId'
+        - $ref: "#/components/parameters/EntityId"
       requestBody:
         required: true
         content:
@@ -93,7 +93,7 @@ paths:
                   example: "RWF"
                   default: "RWF"
       responses:
-        '200':
+        "200":
           description: VAT calculation result
           content:
             application/json:
@@ -130,14 +130,14 @@ paths:
                         type: integer
                       appliedRate:
                         type: number
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /entities/{entityId}/vat/returns:
     get:
@@ -147,7 +147,7 @@ paths:
       description: Retrieve VAT returns for the entity with filtering options
       operationId: listVATReturns
       parameters:
-        - $ref: '#/components/parameters/EntityId'
+        - $ref: "#/components/parameters/EntityId"
         - name: period
           in: query
           description: Filter by return period (YYYY-MM format)
@@ -168,7 +168,7 @@ paths:
             type: string
             enum: [monthly, quarterly]
       responses:
-        '200':
+        "200":
           description: List of VAT returns
           content:
             application/json:
@@ -178,13 +178,13 @@ paths:
                   data:
                     type: array
                     items:
-                      $ref: '#/components/schemas/VATReturn'
+                      $ref: "#/components/schemas/VATReturn"
                   pagination:
-                    $ref: '#/components/schemas/Pagination'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+                    $ref: "#/components/schemas/Pagination"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
     post:
       tags:
@@ -199,7 +199,7 @@ paths:
         - Generates RRA-compatible CSV export
       operationId: generateVATReturn
       parameters:
-        - $ref: '#/components/parameters/EntityId'
+        - $ref: "#/components/parameters/EntityId"
       requestBody:
         required: true
         content:
@@ -229,24 +229,24 @@ paths:
                   default: true
                   description: Include zero-rated supplies in calculations
       responses:
-        '201':
+        "201":
           description: VAT return generated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/VATReturn'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '409':
+                $ref: "#/components/schemas/VATReturn"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
           description: VAT return already exists for this period
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /entities/{entityId}/vat/returns/{returnId}/export:
     get:
@@ -258,7 +258,7 @@ paths:
         Includes all required fields per RRA specifications.
       operationId: exportVATReturn
       parameters:
-        - $ref: '#/components/parameters/EntityId'
+        - $ref: "#/components/parameters/EntityId"
         - name: returnId
           in: path
           required: true
@@ -274,7 +274,7 @@ paths:
             enum: [csv, excel, pdf]
             default: csv
       responses:
-        '200':
+        "200":
           description: VAT return export file
           content:
             text/csv:
@@ -289,17 +289,17 @@ paths:
               schema:
                 type: string
                 format: binary
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   # ============================================================================
   # WITHHOLDING TAX (WHT) ENDPOINTS
   # ============================================================================
-  
+
   /entities/{entityId}/wht/calculate:
     post:
       tags:
@@ -310,7 +310,7 @@ paths:
         Supports Rwanda WHT matrix: 15% standard, 5% reduced, 30% non-resident.
       operationId: calculateWHT
       parameters:
-        - $ref: '#/components/parameters/EntityId'
+        - $ref: "#/components/parameters/EntityId"
       requestBody:
         required: true
         content:
@@ -328,11 +328,25 @@ paths:
                   example: 10000000
                 paymentType:
                   type: string
-                  enum: [professional_services, interest, dividends, royalties, rent, management_fees]
+                  enum:
+                    [
+                      professional_services,
+                      interest,
+                      dividends,
+                      royalties,
+                      rent,
+                      management_fees,
+                    ]
                   example: "professional_services"
                 recipientType:
                   type: string
-                  enum: [resident_individual, resident_company, non_resident, government]
+                  enum:
+                    [
+                      resident_individual,
+                      resident_company,
+                      non_resident,
+                      government,
+                    ]
                   example: "resident_company"
                 recipientTIN:
                   type: string
@@ -343,7 +357,7 @@ paths:
                   default: false
                   description: Whether recipient qualifies for tax treaty benefits
       responses:
-        '200':
+        "200":
           description: WHT calculation result
           content:
             application/json:
@@ -373,10 +387,10 @@ paths:
                     type: string
                     nullable: true
                     example: null
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /entities/{entityId}/wht/vouchers:
     post:
@@ -388,7 +402,7 @@ paths:
         This records the WHT deduction and creates the necessary GL entries.
       operationId: createWHTVoucher
       parameters:
-        - $ref: '#/components/parameters/EntityId'
+        - $ref: "#/components/parameters/EntityId"
       requestBody:
         required: true
         content:
@@ -429,16 +443,16 @@ paths:
                   description: Payment description
                   example: "Professional consulting services Q4 2023"
       responses:
-        '201':
+        "201":
           description: WHT voucher created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WHTVoucher'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+                $ref: "#/components/schemas/WHTVoucher"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /entities/{entityId}/wht/certificates:
     get:
@@ -448,7 +462,7 @@ paths:
       description: List withholding tax certificates with filtering options
       operationId: listWHTCertificates
       parameters:
-        - $ref: '#/components/parameters/EntityId'
+        - $ref: "#/components/parameters/EntityId"
         - name: vendorId
           in: query
           description: Filter by vendor
@@ -469,7 +483,7 @@ paths:
             type: string
             enum: [draft, issued, submitted]
       responses:
-        '200':
+        "200":
           description: List of WHT certificates
           content:
             application/json:
@@ -479,9 +493,9 @@ paths:
                   data:
                     type: array
                     items:
-                      $ref: '#/components/schemas/WHTCertificate'
+                      $ref: "#/components/schemas/WHTCertificate"
                   pagination:
-                    $ref: '#/components/schemas/Pagination'
+                    $ref: "#/components/schemas/Pagination"
 
     post:
       tags:
@@ -492,7 +506,7 @@ paths:
         Consolidates all WHT vouchers for the vendor within the period.
       operationId: generateWHTCertificate
       parameters:
-        - $ref: '#/components/parameters/EntityId'
+        - $ref: "#/components/parameters/EntityId"
       requestBody:
         required: true
         content:
@@ -519,17 +533,17 @@ paths:
                   description: Certificate period end
                   example: "2023-12-31"
       responses:
-        '201':
+        "201":
           description: WHT certificate generated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WHTCertificate'
+                $ref: "#/components/schemas/WHTCertificate"
 
   # ============================================================================
   # PAYE ENDPOINTS
   # ============================================================================
-  
+
   /entities/{entityId}/paye/calculate:
     post:
       tags:
@@ -543,7 +557,7 @@ paths:
         - 15% flat rate for casual labor
       operationId: calculatePAYE
       parameters:
-        - $ref: '#/components/parameters/EntityId'
+        - $ref: "#/components/parameters/EntityId"
       requestBody:
         required: true
         content:
@@ -579,7 +593,7 @@ paths:
                   example: 2024
                   default: 2024
       responses:
-        '200':
+        "200":
           description: PAYE calculation result
           content:
             application/json:
@@ -641,7 +655,7 @@ paths:
         Creates RRA-compatible format for electronic submission.
       operationId: generatePAYEReturn
       parameters:
-        - $ref: '#/components/parameters/EntityId'
+        - $ref: "#/components/parameters/EntityId"
       requestBody:
         required: true
         content:
@@ -665,17 +679,17 @@ paths:
                   default: true
                   description: Include terminated employees in the return
       responses:
-        '201':
+        "201":
           description: PAYE return generated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PAYEReturn'
+                $ref: "#/components/schemas/PAYEReturn"
 
   # ============================================================================
   # TAX RULES AND CONFIGURATION
   # ============================================================================
-  
+
   /entities/{entityId}/tax-codes:
     get:
       tags:
@@ -684,7 +698,7 @@ paths:
       description: Get all active tax codes for the entity
       operationId: listTaxCodes
       parameters:
-        - $ref: '#/components/parameters/EntityId'
+        - $ref: "#/components/parameters/EntityId"
         - name: taxType
           in: query
           description: Filter by tax type
@@ -698,7 +712,7 @@ paths:
             type: boolean
             default: true
       responses:
-        '200':
+        "200":
           description: List of tax codes
           content:
             application/json:
@@ -708,7 +722,7 @@ paths:
                   data:
                     type: array
                     items:
-                      $ref: '#/components/schemas/TaxCode'
+                      $ref: "#/components/schemas/TaxCode"
 
   /entities/{entityId}/tax-rules/migrate:
     post:
@@ -720,7 +734,7 @@ paths:
         Used when Rwanda tax regulations change.
       operationId: migrateTaxRules
       parameters:
-        - $ref: '#/components/parameters/EntityId'
+        - $ref: "#/components/parameters/EntityId"
       requestBody:
         required: true
         content:
@@ -749,7 +763,7 @@ paths:
                   default: true
                   description: Create backup before migration
       responses:
-        '202':
+        "202":
           description: Migration started successfully
           content:
             application/json:
@@ -769,7 +783,7 @@ paths:
   # ============================================================================
   # REPORTING ENDPOINTS
   # ============================================================================
-  
+
   /entities/{entityId}/reports/vat-register:
     get:
       tags:
@@ -778,7 +792,7 @@ paths:
       description: Detailed VAT register showing all VAT transactions for a period
       operationId: generateVATRegister
       parameters:
-        - $ref: '#/components/parameters/EntityId'
+        - $ref: "#/components/parameters/EntityId"
         - name: startDate
           in: query
           required: true
@@ -801,12 +815,12 @@ paths:
             enum: [json, csv, excel, pdf]
             default: json
       responses:
-        '200':
+        "200":
           description: VAT register report
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/VATRegisterReport'
+                $ref: "#/components/schemas/VATRegisterReport"
 
   /entities/{entityId}/reports/wht-register:
     get:
@@ -816,7 +830,7 @@ paths:
       description: Comprehensive WHT register for RRA compliance
       operationId: generateWHTRegister
       parameters:
-        - $ref: '#/components/parameters/EntityId'
+        - $ref: "#/components/parameters/EntityId"
         - name: startDate
           in: query
           required: true
@@ -836,12 +850,12 @@ paths:
             enum: [json, csv, excel]
             default: json
       responses:
-        '200':
+        "200":
           description: WHT register report
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WHTRegisterReport'
+                $ref: "#/components/schemas/WHTRegisterReport"
 
 # ============================================================================
 # COMPONENTS
@@ -1233,7 +1247,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: "#/components/schemas/Error"
           example:
             error: "ValidationError"
             message: "Invalid tax code specified"
@@ -1247,7 +1261,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: "#/components/schemas/Error"
           example:
             error: "Unauthorized"
             message: "Invalid or expired authentication token"
@@ -1257,7 +1271,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: "#/components/schemas/Error"
           example:
             error: "Forbidden"
             message: "User does not have permission to access this entity"
@@ -1267,7 +1281,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: "#/components/schemas/Error"
           example:
             error: "NotFound"
             message: "Entity not found"

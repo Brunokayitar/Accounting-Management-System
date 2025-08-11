@@ -18,6 +18,7 @@ This guide provides detailed instructions for installing and configuring the Rwa
 ### System Requirements
 
 #### Minimum Requirements
+
 - **OS**: Ubuntu 20.04 LTS, CentOS 8, macOS 11+, or Windows 10 with WSL2
 - **CPU**: 2 cores, 2.4 GHz
 - **RAM**: 4 GB
@@ -25,6 +26,7 @@ This guide provides detailed instructions for installing and configuring the Rwa
 - **Network**: Stable internet connection for RRA API integration
 
 #### Recommended Requirements
+
 - **OS**: Ubuntu 22.04 LTS or Amazon Linux 2
 - **CPU**: 4 cores, 3.0 GHz
 - **RAM**: 8 GB
@@ -34,17 +36,20 @@ This guide provides detailed instructions for installing and configuring the Rwa
 ### Software Dependencies
 
 #### Required Software
+
 - **Node.js**: Version 18.0 or later
 - **npm**: Version 8.0 or later (comes with Node.js)
 - **PostgreSQL**: Version 15.0 or later
 - **Redis**: Version 7.0 or later
 
 #### Optional Software
+
 - **Docker**: Version 24.0 or later (for containerized deployment)
 - **Kubernetes**: Version 1.28 or later (for production clusters)
 - **Git**: For version control and deployment
 
 ### Network Requirements
+
 - **Inbound**: Port 8080 (application), 5432 (PostgreSQL), 6379 (Redis)
 - **Outbound**: HTTPS (443) for RRA API, SMTP (587) for email
 - **Internal**: Database and cache connections
@@ -54,6 +59,7 @@ This guide provides detailed instructions for installing and configuring the Rwa
 ### Step 1: Install Node.js
 
 #### Ubuntu/Debian
+
 ```bash
 # Install Node.js 18 LTS
 curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
@@ -65,6 +71,7 @@ npm --version
 ```
 
 #### macOS (using Homebrew)
+
 ```bash
 # Install Homebrew if not already installed
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -78,6 +85,7 @@ npm --version
 ```
 
 #### Windows (using Node.js installer)
+
 1. Download Node.js 18 LTS from [nodejs.org](https://nodejs.org/)
 2. Run the installer with default settings
 3. Open Command Prompt and verify: `node --version`
@@ -85,6 +93,7 @@ npm --version
 ### Step 2: Install PostgreSQL
 
 #### Ubuntu/Debian
+
 ```bash
 # Install PostgreSQL 15
 sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
@@ -103,6 +112,7 @@ sudo -u postgres createdb rwanda_ams_dev -O rwanda_ams
 ```
 
 #### macOS (using Homebrew)
+
 ```bash
 # Install PostgreSQL
 brew install postgresql@15
@@ -117,6 +127,7 @@ createdb rwanda_ams_dev -O rwanda_ams
 ```
 
 #### Windows (using PostgreSQL installer)
+
 1. Download PostgreSQL 15 from [postgresql.org](https://www.postgresql.org/download/windows/)
 2. Run installer, set password for 'postgres' user
 3. Use pgAdmin or psql to create:
@@ -126,6 +137,7 @@ createdb rwanda_ams_dev -O rwanda_ams
 ### Step 3: Install Redis
 
 #### Ubuntu/Debian
+
 ```bash
 # Install Redis
 sudo apt update
@@ -140,6 +152,7 @@ redis-cli ping
 ```
 
 #### macOS (using Homebrew)
+
 ```bash
 # Install Redis
 brew install redis
@@ -152,6 +165,7 @@ redis-cli ping
 ```
 
 #### Windows (using WSL2 or Docker)
+
 ```bash
 # Using WSL2 Ubuntu
 sudo apt update
@@ -263,6 +277,7 @@ The application should now be running at `http://localhost:8080`.
 ## Docker Installation
 
 ### Prerequisites
+
 - Docker 24.0 or later
 - Docker Compose 2.0 or later
 
@@ -347,6 +362,7 @@ docker-compose exec -T postgres psql -U rwanda_ams rwanda_ams < backup.sql
 ### Prerequisites for Production
 
 #### Server Requirements
+
 - **OS**: Ubuntu 22.04 LTS (recommended)
 - **CPU**: 4+ cores, 3.0+ GHz
 - **RAM**: 16+ GB
@@ -354,6 +370,7 @@ docker-compose exec -T postgres psql -U rwanda_ams rwanda_ams < backup.sql
 - **Network**: High-speed internet with SSL certificate
 
 #### Security Requirements
+
 - Firewall configured (UFW recommended)
 - SSL/TLS certificates
 - Regular security updates
@@ -658,15 +675,15 @@ sudo ufw status verbose
 
 ### Environment Variables Reference
 
-| Variable | Description | Example | Required |
-|----------|-------------|---------|----------|
-| `DATABASE_URL` | PostgreSQL connection string | `postgresql://user:pass@host:5432/db` | Yes |
-| `REDIS_URL` | Redis connection string | `redis://localhost:6379` | Yes |
-| `JWT_SECRET` | JWT signing secret (32+ chars) | `random_32_character_string` | Yes |
-| `RRA_API_URL` | RRA eTax API endpoint | `https://etax.rra.gov.rw/api` | Yes |
-| `RRA_API_KEY` | RRA API authentication key | `api_key_from_rra` | Yes |
-| `SMTP_HOST` | Email server hostname | `smtp.gmail.com` | No |
-| `AWS_ACCESS_KEY_ID` | AWS access key for S3 storage | `AKIAIOSFODNN7EXAMPLE` | No |
+| Variable            | Description                    | Example                               | Required |
+| ------------------- | ------------------------------ | ------------------------------------- | -------- |
+| `DATABASE_URL`      | PostgreSQL connection string   | `postgresql://user:pass@host:5432/db` | Yes      |
+| `REDIS_URL`         | Redis connection string        | `redis://localhost:6379`              | Yes      |
+| `JWT_SECRET`        | JWT signing secret (32+ chars) | `random_32_character_string`          | Yes      |
+| `RRA_API_URL`       | RRA eTax API endpoint          | `https://etax.rra.gov.rw/api`         | Yes      |
+| `RRA_API_KEY`       | RRA API authentication key     | `api_key_from_rra`                    | Yes      |
+| `SMTP_HOST`         | Email server hostname          | `smtp.gmail.com`                      | No       |
+| `AWS_ACCESS_KEY_ID` | AWS access key for S3 storage  | `AKIAIOSFODNN7EXAMPLE`                | No       |
 
 ### Rwanda Tax Configuration
 
@@ -801,6 +818,7 @@ htop  # or top on systems without htop
 **Symptom**: `ECONNREFUSED` or `authentication failed` errors
 
 **Solution**:
+
 ```bash
 # Check PostgreSQL status
 sudo systemctl status postgresql
@@ -823,6 +841,7 @@ sudo systemctl restart postgresql
 **Symptom**: `ECONNREFUSED` connecting to Redis
 
 **Solution**:
+
 ```bash
 # Check Redis status
 sudo systemctl status redis-server
@@ -845,6 +864,7 @@ sudo systemctl restart redis-server
 **Symptom**: Application exits immediately or shows startup errors
 
 **Solution**:
+
 ```bash
 # Check application logs
 npm run logs
@@ -867,15 +887,16 @@ npm list --depth=0
 **Symptom**: VAT/WHT calculations don't match expected values
 
 **Solution**:
+
 ```bash
 # Verify tax codes
 npm run db:verify-tax-codes
 
 # Check tax code effective dates
 psql -h localhost -U rwanda_ams -d rwanda_ams -c "
-  SELECT code, name, rate, effective_from, effective_to 
-  FROM tax_codes 
-  WHERE is_active = true 
+  SELECT code, name, rate, effective_from, effective_to
+  FROM tax_codes
+  WHERE is_active = true
   ORDER BY code;
 "
 
@@ -891,6 +912,7 @@ npm run logs:tax-calculations
 **Symptom**: RRA API calls fail or return errors
 
 **Solution**:
+
 ```bash
 # Check RRA API configuration
 echo $RRA_API_URL
@@ -912,6 +934,7 @@ npm run logs:rra-integration
 #### Slow Database Queries
 
 **Solution**:
+
 ```bash
 # Enable query logging
 sudo nano /etc/postgresql/15/main/postgresql.conf
@@ -928,9 +951,9 @@ sudo tail -f /var/log/postgresql/postgresql-15-main.log
 
 # Analyze query performance
 psql -h localhost -U rwanda_ams -d rwanda_ams -c "
-  SELECT query, calls, total_time, mean_time 
-  FROM pg_stat_statements 
-  ORDER BY total_time DESC 
+  SELECT query, calls, total_time, mean_time
+  FROM pg_stat_statements
+  ORDER BY total_time DESC
   LIMIT 10;
 "
 ```
@@ -938,6 +961,7 @@ psql -h localhost -U rwanda_ams -d rwanda_ams -c "
 #### High Memory Usage
 
 **Solution**:
+
 ```bash
 # Check process memory usage
 ps aux | grep node
@@ -981,6 +1005,7 @@ df -h >> system-info.txt
 - **Community Forum**: [Developer community](https://community.rwanda-ams.com)
 
 Include the following information when requesting support:
+
 - Operating system and version
 - Node.js and npm versions
 - Error messages and stack traces

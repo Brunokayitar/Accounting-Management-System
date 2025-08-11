@@ -23,12 +23,12 @@ metadata:
   namespace: rwanda-ams
   name: rwanda-ams-role
 rules:
-- apiGroups: [""]
-  resources: ["configmaps", "secrets"]
-  verbs: ["get", "list", "watch"]
-- apiGroups: [""]
-  resources: ["pods"]
-  verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["configmaps", "secrets"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
 ---
 # Role Binding
 apiVersion: rbac.authorization.k8s.io/v1
@@ -37,9 +37,9 @@ metadata:
   name: rwanda-ams-rolebinding
   namespace: rwanda-ams
 subjects:
-- kind: ServiceAccount
-  name: rwanda-ams-service-account
-  namespace: rwanda-ams
+  - kind: ServiceAccount
+    name: rwanda-ams-service-account
+    namespace: rwanda-ams
 roleRef:
   kind: Role
   name: rwanda-ams-role

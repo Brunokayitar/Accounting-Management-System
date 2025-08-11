@@ -43,7 +43,7 @@ metadata:
 provisioner: efs.csi.aws.com
 parameters:
   provisioningMode: efs-ap
-  fileSystemId: fs-xxxxxxxxx  # Replace with actual EFS filesystem ID
+  fileSystemId: fs-xxxxxxxxx # Replace with actual EFS filesystem ID
   directoryPerms: "0755"
 volumeBindingMode: Immediate
 reclaimPolicy: Retain
@@ -60,15 +60,15 @@ spec:
     matchLabels:
       app: postgres
   policyTypes:
-  - Ingress
-  - Egress
+    - Ingress
+    - Egress
   ingress:
-  - from:
-    - podSelector:
-        matchLabels:
-          app: rwanda-ams
-    ports:
-    - protocol: TCP
-      port: 5432
+    - from:
+        - podSelector:
+            matchLabels:
+              app: rwanda-ams
+      ports:
+        - protocol: TCP
+          port: 5432
   egress:
-  - {}  # Allow all egress for now, can be restricted further
+    - {} # Allow all egress for now, can be restricted further
