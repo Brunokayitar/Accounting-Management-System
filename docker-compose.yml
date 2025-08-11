@@ -1,0 +1,227 @@
+# Rwanda AMS Docker Compose Configuration
+# Production-ready setup with PostgreSQL, Redis, and monitoring
+
+version: '3.8'
+
+services:
+  # ============================================================================
+  # APPLICATION SERVICES
+  # ============================================================================
+  
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: rwanda-ams-app
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-rwanda_ams}:${POSTGRES_PASSWORD:-secure_password}@postgres:5432/${POSTGRES_DB:-rwanda_ams}
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET:-change_this_in_production}
+      - SESSION_SECRET=${SESSION_SECRET:-change_this_in_production}
+      - APP_URL=${APP_URL:-http://localhost:8080}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-32_character_encryption_key_here}
+      - RRA_API_URL=${RRA_API_URL:-https://etax.rra.gov.rw/api}
+      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - S3_BUCKET=${S3_BUCKET:-rwanda-ams-documents}
+    volumes:
+      - app_logs:/app/logs
+      - app_uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - rwanda-ams-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ============================================================================
+  # DATABASE SERVICES
+  # ============================================================================
+  
+  postgres:
+    image: postgres:15-alpine
+    container_name: rwanda-ams-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-rwanda_ams}
+      - POSTGRES_USER=${POSTGRES_USER:-rwanda_ams}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-secure_password}
+      - POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./schema:/docker-entrypoint-initdb.d
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    networks:
+      - rwanda-ams-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-rwanda_ams} -d ${POSTGRES_DB:-rwanda_ams}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: >
+      postgres
+        -c max_connections=200
+        -c shared_preload_libraries=pg_stat_statements
+        -c track_activity_query_size=2048
+        -c pg_stat_statements.track=all
+        -c log_statement=all
+        -c log_min_duration_statement=100
+        -c checkpoint_completion_target=0.9
+        -c wal_buffers=16MB
+        -c default_statistics_target=100
+
+  redis:
+    image: redis:7-alpine
+    container_name: rwanda-ams-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - rwanda-ams-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: >
+      redis-server
+        --maxmemory 256mb
+        --maxmemory-policy allkeys-lru
+        --save 900 1
+        --save 300 10
+        --save 60 10000
+        --appendonly yes
+
+  # ============================================================================
+  # MONITORING AND OBSERVABILITY
+  # ============================================================================
+  
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: rwanda-ams-prometheus
+    restart: unless-stopped
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - rwanda-ams-network
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: rwanda-ams-grafana
+    restart: unless-stopped
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    networks:
+      - rwanda-ams-network
+    depends_on:
+      - prometheus
+
+  # ============================================================================
+  # REVERSE PROXY AND SSL
+  # ============================================================================
+  
+  nginx:
+    image: nginx:alpine
+    container_name: rwanda-ams-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./ssl:/etc/nginx/ssl
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      - app
+    networks:
+      - rwanda-ams-network
+
+  # ============================================================================
+  # BACKUP SERVICE
+  # ============================================================================
+  
+  backup:
+    image: postgres:15-alpine
+    container_name: rwanda-ams-backup
+    restart: "no"
+    environment:
+      - PGPASSWORD=${POSTGRES_PASSWORD:-secure_password}
+    volumes:
+      - ./backups:/backups
+      - ./scripts/backup.sh:/backup.sh
+    networks:
+      - rwanda-ams-network
+    depends_on:
+      - postgres
+    command: sh -c "chmod +x /backup.sh && crond -f"
+
+# ============================================================================
+# NETWORKS
+# ============================================================================
+
+networks:
+  rwanda-ams-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# ============================================================================
+# VOLUMES
+# ============================================================================
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  app_logs:
+    driver: local
+  app_uploads:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  nginx_logs:
+    driver: local
