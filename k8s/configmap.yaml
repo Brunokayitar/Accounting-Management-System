@@ -1,0 +1,113 @@
+# Rwanda AMS Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rwanda-ams-config
+  namespace: rwanda-ams
+  labels:
+    app: rwanda-ams
+data:
+  NODE_ENV: "production"
+  LOG_LEVEL: "info"
+  PORT: "8080"
+  
+  # Database Configuration
+  DB_HOST: "postgres-service"
+  DB_PORT: "5432"
+  DB_NAME: "rwanda_ams"
+  DB_SSL: "false"
+  
+  # Redis Configuration
+  REDIS_HOST: "redis-service"
+  REDIS_PORT: "6379"
+  
+  # Application URLs
+  APP_URL: "https://ams.rwanda.gov.rw"
+  API_URL: "https://api.ams.rwanda.gov.rw"
+  
+  # RRA Integration
+  RRA_API_URL: "https://etax.rra.gov.rw/api"
+  RRA_ENVIRONMENT: "production"
+  
+  # Email Configuration
+  SMTP_HOST: "smtp.gmail.com"
+  SMTP_PORT: "587"
+  SMTP_SECURE: "false"
+  
+  # Storage Configuration
+  STORAGE_TYPE: "s3"
+  AWS_REGION: "us-east-1"
+  S3_BUCKET: "rwanda-ams-prod-documents"
+  
+  # Feature Flags
+  ENABLE_AUDIT_LOGGING: "true"
+  ENABLE_RRA_INTEGRATION: "true"
+  ENABLE_EMAIL_NOTIFICATIONS: "true"
+  ENABLE_BACKUP_ENCRYPTION: "true"
+  
+  # Tax Configuration
+  DEFAULT_VAT_RATE: "18.0"
+  DEFAULT_WHT_RATE: "15.0"
+  ANNUAL_TURNOVER_THRESHOLD: "200000000"
+  
+  # Security Configuration
+  SESSION_TIMEOUT: "3600"
+  MAX_LOGIN_ATTEMPTS: "5"
+  PASSWORD_MIN_LENGTH: "8"
+  REQUIRE_2FA: "true"
+  
+  # Monitoring
+  METRICS_ENABLED: "true"
+  HEALTH_CHECK_INTERVAL: "30"
+  
+---
+# Secrets (these should be created separately in production)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: rwanda-ams-secrets
+  namespace: rwanda-ams
+  labels:
+    app: rwanda-ams
+type: Opaque
+stringData:
+  # Database Credentials
+  DB_USERNAME: "rwanda_ams_user"
+  DB_PASSWORD: "CHANGE_THIS_IN_PRODUCTION"
+  DATABASE_URL: "postgresql://rwanda_ams_user:CHANGE_THIS_IN_PRODUCTION@postgres-service:5432/rwanda_ams"
+  
+  # Application Secrets
+  JWT_SECRET: "CHANGE_THIS_JWT_SECRET_IN_PRODUCTION_32_CHARS"
+  SESSION_SECRET: "CHANGE_THIS_SESSION_SECRET_IN_PRODUCTION"
+  ENCRYPTION_KEY: "CHANGE_THIS_ENCRYPTION_KEY_32_CHARS"
+  
+  # Email Credentials
+  SMTP_USERNAME: "noreply@ams.rwanda.gov.rw"
+  SMTP_PASSWORD: "CHANGE_THIS_EMAIL_PASSWORD"
+  
+  # AWS Credentials
+  AWS_ACCESS_KEY_ID: "CHANGE_THIS_AWS_ACCESS_KEY"
+  AWS_SECRET_ACCESS_KEY: "CHANGE_THIS_AWS_SECRET_KEY"
+  
+  # RRA API Credentials
+  RRA_API_KEY: "CHANGE_THIS_RRA_API_KEY"
+  RRA_CLIENT_ID: "CHANGE_THIS_RRA_CLIENT_ID"
+  RRA_CLIENT_SECRET: "CHANGE_THIS_RRA_CLIENT_SECRET"
+  
+  # Monitoring
+  GRAFANA_ADMIN_PASSWORD: "CHANGE_THIS_GRAFANA_PASSWORD"
+  
+---
+# TLS Secret for HTTPS
+apiVersion: v1
+kind: Secret
+metadata:
+  name: rwanda-ams-tls
+  namespace: rwanda-ams
+  labels:
+    app: rwanda-ams
+type: kubernetes.io/tls
+data:
+  # These should be base64 encoded certificates
+  tls.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t  # Replace with actual certificate
+  tls.key: LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0t  # Replace with actual private key
