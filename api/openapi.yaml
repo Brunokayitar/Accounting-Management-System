@@ -1,0 +1,1296 @@
+openapi: 3.0.3
+info:
+  title: Rwanda Accounting Management System (AMS) API
+  description: |
+    Comprehensive accounting and tax compliance API for businesses operating in Rwanda.
+    
+    This API provides endpoints for:
+    - Multi-entity accounting operations
+    - Rwanda Revenue Authority (RRA) tax compliance
+    - VAT calculations and returns (18% standard, 0%, exempt)
+    - Withholding Tax (WHT) management and certificates
+    - PAYE payroll tax calculations
+    - Corporate Income Tax (CIT) support
+    - Financial reporting and audit trails
+    
+    **Rwanda Tax Compliance Features:**
+    - Automatic VAT filing frequency selection (monthly/quarterly based on RWF 200M threshold)
+    - Pre-filled VAT returns compatible with RRA eTax system
+    - WHT matrix application (15% standard, 5% reduced, 30% non-resident)
+    - PAYE calculations using current RRA bands
+    - Multi-currency support with RWF as functional currency
+    
+    **Authentication:** All endpoints require Bearer token authentication with appropriate RBAC permissions.
+    
+    **Rate Limiting:** 1000 requests per minute per API key.
+    
+    **Data Formats:** All monetary amounts in minor currency units (e.g., RWF 1,000 = 100000).
+    
+  version: 1.0.0
+  contact:
+    name: Rwanda AMS Support
+    email: support@rwanda-ams.com
+    url: https://docs.rwanda-ams.com
+  license:
+    name: Proprietary
+    url: https://rwanda-ams.com/license
+
+servers:
+  - url: https://api.rwanda-ams.com/v1
+    description: Production server
+  - url: https://staging.rwanda-ams.com/v1
+    description: Staging server
+  - url: http://localhost:8080/api/v1
+    description: Local development server
+
+security:
+  - bearerAuth: []
+
+paths:
+  # ============================================================================
+  # VAT ENDPOINTS
+  # ============================================================================
+  
+  /entities/{entityId}/vat/calculate:
+    post:
+      tags:
+        - VAT
+      summary: Calculate VAT for transaction
+      description: |
+        Calculate VAT amounts for a transaction line item based on Rwanda tax codes.
+        Supports 18% standard rate, 0% zero-rated, and exempt calculations.
+      operationId: calculateVAT
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - amount
+                - taxCode
+                - priceInclusive
+              properties:
+                amount:
+                  type: integer
+                  description: Amount in minor currency units (RWF cents)
+                  example: 1000000
+                  minimum: 0
+                taxCode:
+                  type: string
+                  description: Tax code to apply
+                  example: "VAT_18"
+                  enum: [VAT_18, VAT_0, VAT_EXEMPT]
+                priceInclusive:
+                  type: boolean
+                  description: Whether the amount includes VAT
+                  example: false
+                currency:
+                  type: string
+                  description: Transaction currency (converted to RWF)
+                  example: "RWF"
+                  default: "RWF"
+      responses:
+        '200':
+          description: VAT calculation result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  grossAmount:
+                    type: integer
+                    description: Total amount including VAT
+                    example: 1180000
+                  netAmount:
+                    type: integer
+                    description: Amount excluding VAT
+                    example: 1000000
+                  vatAmount:
+                    type: integer
+                    description: VAT amount
+                    example: 180000
+                  vatRate:
+                    type: number
+                    format: float
+                    description: Applied VAT rate percentage
+                    example: 18.0
+                  taxCode:
+                    type: string
+                    example: "VAT_18"
+                  calculation:
+                    type: object
+                    properties:
+                      method:
+                        type: string
+                        enum: [inclusive, exclusive, exempt]
+                      baseAmount:
+                        type: integer
+                      appliedRate:
+                        type: number
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /entities/{entityId}/vat/returns:
+    get:
+      tags:
+        - VAT
+      summary: List VAT returns
+      description: Retrieve VAT returns for the entity with filtering options
+      operationId: listVATReturns
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+        - name: period
+          in: query
+          description: Filter by return period (YYYY-MM format)
+          schema:
+            type: string
+            pattern: '^\d{4}-\d{2}$'
+            example: "2024-01"
+        - name: status
+          in: query
+          description: Filter by return status
+          schema:
+            type: string
+            enum: [draft, submitted, accepted]
+        - name: filingFrequency
+          in: query
+          description: Filter by filing frequency
+          schema:
+            type: string
+            enum: [monthly, quarterly]
+      responses:
+        '200':
+          description: List of VAT returns
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/VATReturn'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    post:
+      tags:
+        - VAT
+      summary: Generate VAT return
+      description: |
+        Generate a VAT return for the specified period. System automatically:
+        - Determines filing frequency (monthly/quarterly) based on annual turnover
+        - Calculates total sales and VAT collected
+        - Calculates total purchases and input VAT
+        - Computes net VAT payable/refundable
+        - Generates RRA-compatible CSV export
+      operationId: generateVATReturn
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - periodStart
+                - periodEnd
+              properties:
+                periodStart:
+                  type: string
+                  format: date
+                  description: Start date of return period
+                  example: "2024-01-01"
+                periodEnd:
+                  type: string
+                  format: date
+                  description: End date of return period
+                  example: "2024-01-31"
+                filingFrequency:
+                  type: string
+                  enum: [monthly, quarterly]
+                  description: Override automatic frequency determination
+                includeZeroRated:
+                  type: boolean
+                  default: true
+                  description: Include zero-rated supplies in calculations
+      responses:
+        '201':
+          description: VAT return generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VATReturn'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: VAT return already exists for this period
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /entities/{entityId}/vat/returns/{returnId}/export:
+    get:
+      tags:
+        - VAT
+      summary: Export VAT return for RRA submission
+      description: |
+        Export VAT return in RRA-compatible CSV format for eTax submission.
+        Includes all required fields per RRA specifications.
+      operationId: exportVATReturn
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+        - name: returnId
+          in: path
+          required: true
+          description: VAT return ID
+          schema:
+            type: string
+            format: uuid
+        - name: format
+          in: query
+          description: Export format
+          schema:
+            type: string
+            enum: [csv, excel, pdf]
+            default: csv
+      responses:
+        '200':
+          description: VAT return export file
+          content:
+            text/csv:
+              schema:
+                type: string
+                description: CSV data compatible with RRA eTax system
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============================================================================
+  # WITHHOLDING TAX (WHT) ENDPOINTS
+  # ============================================================================
+  
+  /entities/{entityId}/wht/calculate:
+    post:
+      tags:
+        - Withholding Tax
+      summary: Calculate withholding tax
+      description: |
+        Calculate WHT based on payment type and recipient details.
+        Supports Rwanda WHT matrix: 15% standard, 5% reduced, 30% non-resident.
+      operationId: calculateWHT
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - grossAmount
+                - paymentType
+                - recipientType
+              properties:
+                grossAmount:
+                  type: integer
+                  description: Gross payment amount in minor currency units
+                  example: 10000000
+                paymentType:
+                  type: string
+                  enum: [professional_services, interest, dividends, royalties, rent, management_fees]
+                  example: "professional_services"
+                recipientType:
+                  type: string
+                  enum: [resident_individual, resident_company, non_resident, government]
+                  example: "resident_company"
+                recipientTIN:
+                  type: string
+                  description: Recipient's Tax Identification Number
+                  example: "TIN123456789"
+                treatyBenefits:
+                  type: boolean
+                  default: false
+                  description: Whether recipient qualifies for tax treaty benefits
+      responses:
+        '200':
+          description: WHT calculation result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  grossAmount:
+                    type: integer
+                    example: 10000000
+                  whtAmount:
+                    type: integer
+                    example: 1500000
+                  netAmount:
+                    type: integer
+                    example: 8500000
+                  whtRate:
+                    type: number
+                    format: float
+                    example: 15.0
+                  taxCode:
+                    type: string
+                    example: "WHT_15"
+                  applicable:
+                    type: boolean
+                    example: true
+                  exemptionReason:
+                    type: string
+                    nullable: true
+                    example: null
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /entities/{entityId}/wht/vouchers:
+    post:
+      tags:
+        - Withholding Tax
+      summary: Create WHT voucher
+      description: |
+        Create a withholding tax voucher for a payment.
+        This records the WHT deduction and creates the necessary GL entries.
+      operationId: createWHTVoucher
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - paymentId
+                - vendorId
+                - grossAmount
+                - whtAmount
+                - whtRate
+              properties:
+                paymentId:
+                  type: string
+                  format: uuid
+                  description: Related payment ID
+                vendorId:
+                  type: string
+                  format: uuid
+                  description: Vendor/payee ID
+                grossAmount:
+                  type: integer
+                  description: Gross payment amount
+                whtAmount:
+                  type: integer
+                  description: WHT amount deducted
+                whtRate:
+                  type: number
+                  format: float
+                  description: Applied WHT rate
+                paymentDate:
+                  type: string
+                  format: date
+                  description: Payment date
+                description:
+                  type: string
+                  description: Payment description
+                  example: "Professional consulting services Q4 2023"
+      responses:
+        '201':
+          description: WHT voucher created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WHTVoucher'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /entities/{entityId}/wht/certificates:
+    get:
+      tags:
+        - Withholding Tax
+      summary: List WHT certificates
+      description: List withholding tax certificates with filtering options
+      operationId: listWHTCertificates
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+        - name: vendorId
+          in: query
+          description: Filter by vendor
+          schema:
+            type: string
+            format: uuid
+        - name: period
+          in: query
+          description: Filter by period (YYYY-QQ format for quarterly)
+          schema:
+            type: string
+            pattern: '^\d{4}-Q[1-4]$'
+            example: "2023-Q4"
+        - name: status
+          in: query
+          description: Filter by certificate status
+          schema:
+            type: string
+            enum: [draft, issued, submitted]
+      responses:
+        '200':
+          description: List of WHT certificates
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WHTCertificate'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+    post:
+      tags:
+        - Withholding Tax
+      summary: Generate WHT certificate
+      description: |
+        Generate a withholding tax certificate for a vendor for a specific period.
+        Consolidates all WHT vouchers for the vendor within the period.
+      operationId: generateWHTCertificate
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - vendorId
+                - periodStart
+                - periodEnd
+              properties:
+                vendorId:
+                  type: string
+                  format: uuid
+                  description: Vendor ID
+                periodStart:
+                  type: string
+                  format: date
+                  description: Certificate period start
+                  example: "2023-10-01"
+                periodEnd:
+                  type: string
+                  format: date
+                  description: Certificate period end
+                  example: "2023-12-31"
+      responses:
+        '201':
+          description: WHT certificate generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WHTCertificate'
+
+  # ============================================================================
+  # PAYE ENDPOINTS
+  # ============================================================================
+  
+  /entities/{entityId}/paye/calculate:
+    post:
+      tags:
+        - PAYE
+      summary: Calculate PAYE tax
+      description: |
+        Calculate PAYE tax using Rwanda tax bands:
+        - 0% on monthly income up to RWF 60,000
+        - 20% on income from RWF 60,001 to RWF 100,000  
+        - 30% on income above RWF 100,000
+        - 15% flat rate for casual labor
+      operationId: calculatePAYE
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - grossSalary
+                - paymentType
+              properties:
+                grossSalary:
+                  type: integer
+                  description: Monthly gross salary in minor currency units
+                  example: 15000000
+                paymentType:
+                  type: string
+                  enum: [regular_salary, casual_labor, bonus, overtime]
+                  example: "regular_salary"
+                exemptions:
+                  type: object
+                  properties:
+                    medicalInsurance:
+                      type: integer
+                      description: Medical insurance contribution
+                      example: 500000
+                    pensionContribution:
+                      type: integer
+                      description: Pension/NSSF contribution
+                      example: 800000
+                taxYear:
+                  type: integer
+                  description: Tax year for rate lookup
+                  example: 2024
+                  default: 2024
+      responses:
+        '200':
+          description: PAYE calculation result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  grossSalary:
+                    type: integer
+                    example: 15000000
+                  taxableIncome:
+                    type: integer
+                    example: 13700000
+                  payeTax:
+                    type: integer
+                    example: 2140000
+                  netSalary:
+                    type: integer
+                    example: 11560000
+                  bandCalculations:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        band:
+                          type: integer
+                          example: 1
+                        lowerLimit:
+                          type: integer
+                          example: 0
+                        upperLimit:
+                          type: integer
+                          example: 6000000
+                        rate:
+                          type: number
+                          example: 0.0
+                        taxableAmount:
+                          type: integer
+                          example: 6000000
+                        taxAmount:
+                          type: integer
+                          example: 0
+                  employerContributions:
+                    type: object
+                    properties:
+                      nssf:
+                        type: integer
+                        example: 1500000
+                      medicalInsurance:
+                        type: integer
+                        example: 500000
+
+  /entities/{entityId}/paye/returns:
+    post:
+      tags:
+        - PAYE
+      summary: Generate PAYE return
+      description: |
+        Generate monthly PAYE return summarizing all employee tax withholdings.
+        Creates RRA-compatible format for electronic submission.
+      operationId: generatePAYEReturn
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - periodStart
+                - periodEnd
+              properties:
+                periodStart:
+                  type: string
+                  format: date
+                  example: "2024-01-01"
+                periodEnd:
+                  type: string
+                  format: date
+                  example: "2024-01-31"
+                includeTerminated:
+                  type: boolean
+                  default: true
+                  description: Include terminated employees in the return
+      responses:
+        '201':
+          description: PAYE return generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PAYEReturn'
+
+  # ============================================================================
+  # TAX RULES AND CONFIGURATION
+  # ============================================================================
+  
+  /entities/{entityId}/tax-codes:
+    get:
+      tags:
+        - Tax Configuration
+      summary: List tax codes
+      description: Get all active tax codes for the entity
+      operationId: listTaxCodes
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+        - name: taxType
+          in: query
+          description: Filter by tax type
+          schema:
+            type: string
+            enum: [VAT, WHT, PAYE, CIT, EXEMPT]
+        - name: activeOnly
+          in: query
+          description: Return only active tax codes
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: List of tax codes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TaxCode'
+
+  /entities/{entityId}/tax-rules/migrate:
+    post:
+      tags:
+        - Tax Configuration
+      summary: Migrate tax rules
+      description: |
+        Apply new tax rule versions and recalculate affected transactions.
+        Used when Rwanda tax regulations change.
+      operationId: migrateTaxRules
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - ruleVersion
+                - effectiveDate
+              properties:
+                ruleVersion:
+                  type: string
+                  description: New tax rule version identifier
+                  example: "2024.1"
+                effectiveDate:
+                  type: string
+                  format: date
+                  description: Date from which new rules apply
+                  example: "2024-01-01"
+                recalculateOpenTransactions:
+                  type: boolean
+                  default: false
+                  description: Whether to recalculate open transactions
+                backupData:
+                  type: boolean
+                  default: true
+                  description: Create backup before migration
+      responses:
+        '202':
+          description: Migration started successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  migrationId:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                    enum: [queued, in_progress, completed, failed]
+                  affectedTransactions:
+                    type: integer
+                    description: Number of transactions to be updated
+
+  # ============================================================================
+  # REPORTING ENDPOINTS
+  # ============================================================================
+  
+  /entities/{entityId}/reports/vat-register:
+    get:
+      tags:
+        - Reports
+      summary: Generate VAT register report
+      description: Detailed VAT register showing all VAT transactions for a period
+      operationId: generateVATRegister
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+        - name: startDate
+          in: query
+          required: true
+          description: Report start date
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: true
+          description: Report end date
+          schema:
+            type: string
+            format: date
+        - name: format
+          in: query
+          description: Report format
+          schema:
+            type: string
+            enum: [json, csv, excel, pdf]
+            default: json
+      responses:
+        '200':
+          description: VAT register report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VATRegisterReport'
+
+  /entities/{entityId}/reports/wht-register:
+    get:
+      tags:
+        - Reports
+      summary: Generate WHT register report
+      description: Comprehensive WHT register for RRA compliance
+      operationId: generateWHTRegister
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [json, csv, excel]
+            default: json
+      responses:
+        '200':
+          description: WHT register report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WHTRegisterReport'
+
+# ============================================================================
+# COMPONENTS
+# ============================================================================
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token with entity access permissions
+
+  parameters:
+    EntityId:
+      name: entityId
+      in: path
+      required: true
+      description: Entity (company) identifier
+      schema:
+        type: string
+        format: uuid
+        example: "00000000-0000-0000-0000-000000000101"
+
+  schemas:
+    VATReturn:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        entityId:
+          type: string
+          format: uuid
+        periodStart:
+          type: string
+          format: date
+        periodEnd:
+          type: string
+          format: date
+        filingFrequency:
+          type: string
+          enum: [monthly, quarterly]
+        totalSales:
+          type: integer
+          description: Total taxable sales in minor currency units
+        vatOnSales:
+          type: integer
+          description: Total VAT collected on sales
+        totalPurchases:
+          type: integer
+          description: Total taxable purchases
+        vatOnPurchases:
+          type: integer
+          description: Total input VAT on purchases
+        netVATPayable:
+          type: integer
+          description: Net VAT payable (positive) or refundable (negative)
+        status:
+          type: string
+          enum: [draft, submitted, accepted]
+        submittedDate:
+          type: string
+          format: date-time
+          nullable: true
+        rraReference:
+          type: string
+          nullable: true
+          description: RRA reference number after submission
+        exportData:
+          type: object
+          nullable: true
+          description: CSV data for RRA eTax submission
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    WHTVoucher:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        entityId:
+          type: string
+          format: uuid
+        voucherNumber:
+          type: string
+          example: "WHT-2024-001"
+        vendorId:
+          type: string
+          format: uuid
+        grossAmount:
+          type: integer
+        whtAmount:
+          type: integer
+        whtRate:
+          type: number
+          format: float
+        paymentDate:
+          type: string
+          format: date
+        description:
+          type: string
+        status:
+          type: string
+          enum: [draft, posted, reversed]
+        createdAt:
+          type: string
+          format: date-time
+
+    WHTCertificate:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        entityId:
+          type: string
+          format: uuid
+        certificateNumber:
+          type: string
+          example: "WHT-CERT-2023-Q4-001"
+        vendorId:
+          type: string
+          format: uuid
+        vendorName:
+          type: string
+        vendorTIN:
+          type: string
+        periodStart:
+          type: string
+          format: date
+        periodEnd:
+          type: string
+          format: date
+        totalPaymentAmount:
+          type: integer
+        whtRate:
+          type: number
+          format: float
+        whtAmount:
+          type: integer
+        status:
+          type: string
+          enum: [draft, issued, submitted]
+        issuedDate:
+          type: string
+          format: date
+          nullable: true
+        rraReference:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    PAYEReturn:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        entityId:
+          type: string
+          format: uuid
+        periodStart:
+          type: string
+          format: date
+        periodEnd:
+          type: string
+          format: date
+        totalEmployees:
+          type: integer
+        totalGrossPay:
+          type: integer
+        totalPAYEWithheld:
+          type: integer
+        employerContributions:
+          type: integer
+        status:
+          type: string
+          enum: [draft, submitted, accepted]
+        submittedDate:
+          type: string
+          format: date-time
+          nullable: true
+        rraReference:
+          type: string
+          nullable: true
+        exportData:
+          type: object
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    TaxCode:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+          example: "VAT_18"
+        name:
+          type: string
+          example: "VAT Standard Rate 18%"
+        taxType:
+          type: string
+          enum: [VAT, WHT, PAYE, CIT, EXEMPT]
+        rate:
+          type: number
+          format: float
+          example: 18.0
+        appliesTo:
+          type: string
+          enum: [sales, purchases, both]
+        effectiveFrom:
+          type: string
+          format: date
+        effectiveTo:
+          type: string
+          format: date
+          nullable: true
+        description:
+          type: string
+        rraCode:
+          type: string
+          example: "VAT-STD"
+        isActive:
+          type: boolean
+
+    VATRegisterReport:
+      type: object
+      properties:
+        entity:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+            tin:
+              type: string
+            vatNumber:
+              type: string
+        reportPeriod:
+          type: object
+          properties:
+            startDate:
+              type: string
+              format: date
+            endDate:
+              type: string
+              format: date
+        summary:
+          type: object
+          properties:
+            totalSales:
+              type: integer
+            totalVATOnSales:
+              type: integer
+            totalPurchases:
+              type: integer
+            totalVATOnPurchases:
+              type: integer
+            netVATPosition:
+              type: integer
+        transactions:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+              reference:
+                type: string
+              description:
+                type: string
+              grossAmount:
+                type: integer
+              vatAmount:
+                type: integer
+              taxCode:
+                type: string
+              transactionType:
+                type: string
+                enum: [sale, purchase]
+
+    WHTRegisterReport:
+      type: object
+      properties:
+        entity:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+            tin:
+              type: string
+        reportPeriod:
+          type: object
+          properties:
+            startDate:
+              type: string
+              format: date
+            endDate:
+              type: string
+              format: date
+        summary:
+          type: object
+          properties:
+            totalPayments:
+              type: integer
+            totalWHTWithheld:
+              type: integer
+            numberOfPayees:
+              type: integer
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              payeeId:
+                type: string
+                format: uuid
+              payeeName:
+                type: string
+              payeeTIN:
+                type: string
+              totalPayments:
+                type: integer
+              whtRate:
+                type: number
+              whtAmount:
+                type: integer
+              certificateIssued:
+                type: boolean
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          minimum: 1
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+        total:
+          type: integer
+          minimum: 0
+        totalPages:
+          type: integer
+          minimum: 0
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error type
+        message:
+          type: string
+          description: Human-readable error message
+        details:
+          type: object
+          description: Additional error details
+          nullable: true
+        requestId:
+          type: string
+          description: Request tracking ID
+        timestamp:
+          type: string
+          format: date-time
+
+  responses:
+    BadRequest:
+      description: Invalid request parameters or body
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "ValidationError"
+            message: "Invalid tax code specified"
+            details:
+              field: "taxCode"
+              value: "INVALID_CODE"
+              allowedValues: ["VAT_18", "VAT_0", "VAT_EXEMPT"]
+
+    Unauthorized:
+      description: Authentication credentials missing or invalid
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Unauthorized"
+            message: "Invalid or expired authentication token"
+
+    Forbidden:
+      description: Insufficient permissions for requested operation
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Forbidden"
+            message: "User does not have permission to access this entity"
+
+    NotFound:
+      description: Requested resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "NotFound"
+            message: "Entity not found"
+
+tags:
+  - name: VAT
+    description: |
+      Value Added Tax operations supporting Rwanda's 18% standard rate, 0% zero-rated,
+      and exempt categories. Includes automatic filing frequency determination based
+      on RWF 200M annual turnover threshold.
+  - name: Withholding Tax
+    description: |
+      Withholding Tax management supporting Rwanda's WHT matrix (15% standard, 5% reduced,
+      30% non-resident rates). Includes voucher generation and certificate issuance.
+  - name: PAYE
+    description: |
+      Pay As You Earn tax calculations using Rwanda's progressive tax bands
+      (0%/20%/30%) and support for casual labor flat rate (15%).
+  - name: Tax Configuration
+    description: |
+      Tax rule configuration and migration tools for adapting to Rwanda Revenue Authority
+      regulatory changes. Supports versioned tax rules and historical recalculation.
+  - name: Reports
+    description: |
+      Tax compliance reports formatted for RRA submission including VAT registers,
+      WHT registers, and PAYE summaries. Supports multiple export formats.
